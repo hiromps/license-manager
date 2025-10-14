@@ -1,0 +1,374 @@
+{
+  "info": {
+    "name": "License Manager API",
+    "description": "完全なライセンス管理システムAPIテストコレクション",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    {
+      "key": "baseUrl",
+      "value": "http://localhost:3000",
+      "type": "string"
+    },
+    {
+      "key": "token",
+      "value": "",
+      "type": "string"
+    }
+  ],
+  "item": [
+    {
+      "name": "🏥 Health Check",
+      "item": [
+        {
+          "name": "Health Check",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/health",
+              "host": ["{{baseUrl}}"],
+              "path": ["health"]
+            },
+            "description": "サーバーの状態を確認します"
+          }
+        }
+      ]
+    },
+    {
+      "name": "🔐 Authentication",
+      "item": [
+        {
+          "name": "Login",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "// レスポンスが成功した場合、トークンを環境変数に保存",
+                  "if (pm.response.code === 200) {",
+                  "    const response = pm.response.json();",
+                  "    if (response.success && response.data.token) {",
+                  "        pm.collectionVariables.set('token', response.data.token);",
+                  "        console.log('✅ トークンが保存されました');",
+                  "    }",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"admin@acme.com\",\n  \"password\": \"admin123\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/auth/login",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "auth", "login"]
+            },
+            "description": "ユーザーログイン。成功するとJWTトークンが返され、自動的に保存されます。\n\nデフォルト認証情報:\n- Email: admin@acme.com\n- Password: admin123"
+          }
+        },
+        {
+          "name": "Get Current User",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/auth/me",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "auth", "me"]
+            },
+            "description": "ログイン中のユーザー情報を取得します。\n認証が必要です。"
+          }
+        }
+      ]
+    },
+    {
+      "name": "📜 Licenses",
+      "item": [
+        {
+          "name": "List Licenses",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/licenses?page=1&limit=20",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "licenses"],
+              "query": [
+                {
+                  "key": "page",
+                  "value": "1",
+                  "description": "ページ番号"
+                },
+                {
+                  "key": "limit",
+                  "value": "20",
+                  "description": "1ページあたりの件数"
+                },
+                {
+                  "key": "productId",
+                  "value": "",
+                  "disabled": true,
+                  "description": "製品IDでフィルタ"
+                },
+                {
+                  "key": "status",
+                  "value": "",
+                  "disabled": true,
+                  "description": "ステータスでフィルタ (active/expired/suspended)"
+                },
+                {
+                  "key": "search",
+                  "value": "",
+                  "disabled": true,
+                  "description": "ライセンスキーで検索"
+                }
+              ]
+            },
+            "description": "ライセンス一覧を取得します。ページネーション、フィルタリングに対応。"
+          }
+        },
+        {
+          "name": "Create License",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "// 作成されたライセンスIDを保存",
+                  "if (pm.response.code === 201) {",
+                  "    const response = pm.response.json();",
+                  "    if (response.success && response.data.id) {",
+                  "        pm.collectionVariables.set('licenseId', response.data.id);",
+                  "        console.log('✅ ライセンスID: ' + response.data.id);",
+                  "    }",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}",
+                "type": "text"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"productId\": \"製品IDを入力\",\n  \"licenseType\": \"subscription\",\n  \"maxActivations\": 5,\n  \"expiresAt\": \"2025-12-31T23:59:59.999Z\",\n  \"features\": {\n    \"basic\": true,\n    \"advanced\": false\n  },\n  \"notes\": \"テストライセンス\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/licenses",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "licenses"]
+            },
+            "description": "新しいライセンスを作成します。\n\nライセンスタイプ:\n- perpetual: 永久ライセンス\n- subscription: サブスクリプション\n- trial: トライアル版"
+          }
+        },
+        {
+          "name": "Get License",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/licenses/{{licenseId}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "licenses", "{{licenseId}}"]
+            },
+            "description": "特定のライセンスの詳細情報を取得します。"
+          }
+        },
+        {
+          "name": "Update License",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}",
+                "type": "text"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"maxActivations\": 10,\n  \"status\": \"active\",\n  \"notes\": \"更新されたライセンス\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/licenses/{{licenseId}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "licenses", "{{licenseId}}"]
+            },
+            "description": "ライセンス情報を更新します。\n\nステータス:\n- active: 有効\n- suspended: 停止\n- revoked: 取り消し"
+          }
+        },
+        {
+          "name": "Delete License",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/licenses/{{licenseId}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "licenses", "{{licenseId}}"]
+            },
+            "description": "ライセンスを削除します。"
+          }
+        },
+        {
+          "name": "Get License Activations",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/licenses/{{licenseId}}/activations",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "licenses", "{{licenseId}}", "activations"]
+            },
+            "description": "ライセンスのアクティベーション一覧を取得します。"
+          }
+        },
+        {
+          "name": "Revoke Activation",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/licenses/{{licenseId}}/activations/{{activationId}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "licenses", "{{licenseId}}", "activations", "{{activationId}}"]
+            },
+            "description": "デバイスのアクティベーションを取り消します。"
+          }
+        }
+      ]
+    },
+    {
+      "name": "✅ Verification (Public)",
+      "item": [
+        {
+          "name": "Verify License",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"licenseKey\": \"ACM-YOUR-LICENSE-KEY\",\n  \"deviceFingerprint\": \"device-fingerprint-123\",\n  \"productVersion\": \"1.0.0\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/verify",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "verify"]
+            },
+            "description": "ライセンスキーの有効性を検証します。\n認証不要（Public API）。\n\nオフライン検証用の証明書も返されます。"
+          }
+        },
+        {
+          "name": "Activate License",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"licenseKey\": \"ACM-YOUR-LICENSE-KEY\",\n  \"deviceFingerprint\": \"device-fingerprint-123\",\n  \"deviceInfo\": {\n    \"platform\": \"win32\",\n    \"hostname\": \"USER-PC\",\n    \"osVersion\": \"Windows 10\"\n  }\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/activate",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "activate"]
+            },
+            "description": "デバイスでライセンスをアクティベートします。\n認証不要（Public API）。\n\nデバイスフィンガープリントで重複を防止します。"
+          }
+        },
+        {
+          "name": "Heartbeat (Check-in)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"licenseKey\": \"ACM-YOUR-LICENSE-KEY\",\n  \"deviceFingerprint\": \"device-fingerprint-123\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/heartbeat",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "heartbeat"]
+            },
+            "description": "定期的なライセンスチェックイン。\n認証不要（Public API）。\n\nライセンスの有効性を再確認します。"
+          }
+        }
+      ]
+    }
+  ]
+}

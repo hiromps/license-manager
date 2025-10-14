@@ -1,0 +1,38 @@
+# API Dockerfile
+FROM node:20-alpine AS base
+
+# Install dependencies
+FROM base AS deps
+WORKDIR /app
+COPY package.json pnpm-workspace.yaml pnpm-lock.yaml ./
+COPY apps/api/package.json ./apps/api/
+COPY packages/*/package.json ./packages/*/
+RUN corepack enable pnpm && pnpm install --frozen-lockfile
+
+# Build
+FROM base AS builder
+WORKDIR /app
+COPY --from=deps /app/node_modules ./node_modules
+COPY . .
+RUN corepack enable pnpm && \
+    pnpm --filter @license-manager/database db:generate && \
+    pnpm --filter @license-manager/api build
+
+# Production
+FROM base AS runner
+WORKDIR /app
+
+ENV NODE_ENV=production
+
+RUN addgroup --system --gid 1001 nodejs && \
+    adduser --system --uid 1001 apiuser
+
+COPY --from=builder --chown=apiuser:nodejs /app/apps/api/dist ./dist
+COPY --from=builder --chown=apiuser:nodejs /app/node_modules ./node_modules
+COPY --from=builder --chown=apiuser:nodejs /app/packages ./packages
+
+USER apiuser
+
+EXPOSE 3000
+
+CMD ["node", "dist/index.js"]

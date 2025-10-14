@@ -1,0 +1,181 @@
+// License Manager Database Schema
+// Multi-tenant SaaS with shared schema pattern
+
+generator client {
+  provider = "prisma-client-js"
+  output   = "../node_modules/.prisma/client"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// ============================================
+// Core Entities
+// ============================================
+
+model Organization {
+  id        String   @id @default(uuid())
+  name      String
+  slug      String   @unique
+  plan      String   @default("free") // free, pro, enterprise
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // Relations
+  users      User[]
+  products   Product[]
+  licenses   License[]
+  auditLogs  AuditLog[]
+
+  @@index([slug])
+  @@map("organizations")
+}
+
+model User {
+  id             String   @id @default(uuid())
+  organizationId String
+  email          String   @unique
+  passwordHash   String
+  name           String?
+  role           String   @default("member") // owner, admin, member, viewer
+  isActive       Boolean  @default(true)
+  lastLoginAt    DateTime?
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  // Relations
+  organization Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  auditLogs    AuditLog[]
+
+  @@index([organizationId])
+  @@index([email])
+  @@map("users")
+}
+
+model Product {
+  id             String   @id @default(uuid())
+  organizationId String
+  name           String
+  version        String
+  description    String?
+  isActive       Boolean  @default(true)
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  // Relations
+  organization Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  licenses     License[]
+
+  @@index([organizationId])
+  @@map("products")
+}
+
+// ============================================
+// License Management
+// ============================================
+
+model License {
+  id             String    @id @default(uuid())
+  organizationId String
+  productId      String
+  licenseKey     String    @unique
+  licenseType    String    @default("subscription") // perpetual, subscription, trial
+  maxActivations Int       @default(1)
+
+  // Metadata
+  features       String?   // JSON string: { "feature_a": true, "feature_b": false }
+  customFields   String?   // JSON string: Flexible metadata
+  notes          String?
+
+  // Status & Lifecycle
+  status         String    @default("active") // active, suspended, revoked, expired
+  expiresAt      DateTime?
+  createdAt      DateTime  @default(now())
+  updatedAt      DateTime  @updatedAt
+
+  // Relations
+  organization   Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  product        Product      @relation(fields: [productId], references: [id], onDelete: Restrict)
+  activations    Activation[]
+
+  @@index([organizationId])
+  @@index([productId])
+  @@index([licenseKey])
+  @@index([status])
+  @@index([expiresAt])
+  @@map("licenses")
+}
+
+model Activation {
+  id                String    @id @default(uuid())
+  licenseId         String
+  deviceFingerprint String
+  deviceInfo        String?   // JSON string: { platform, hostname, osVersion }
+  ipAddress         String?
+  userAgent         String?
+
+  // Status
+  status            String    @default("active") // active, suspended, revoked
+  activatedAt       DateTime  @default(now())
+  lastCheckInAt     DateTime  @default(now())
+  revokedAt         DateTime?
+
+  // Relations
+  license           License   @relation(fields: [licenseId], references: [id], onDelete: Cascade)
+
+  @@unique([licenseId, deviceFingerprint])
+  @@index([licenseId])
+  @@index([deviceFingerprint])
+  @@index([status])
+  @@map("activations")
+}
+
+// ============================================
+// Audit & Compliance
+// ============================================
+
+model AuditLog {
+  id             String   @id @default(uuid())
+  organizationId String
+  userId         String?
+  action         String   // LICENSE_CREATED, ACTIVATION_REVOKED, etc.
+  resourceType   String   // LICENSE, ACTIVATION, USER
+  resourceId     String?
+  metadata       String?  // JSON string: Action-specific data
+  ipAddress      String?
+  userAgent      String?
+  createdAt      DateTime @default(now())
+
+  // Relations
+  organization   Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  user           User?        @relation(fields: [userId], references: [id], onDelete: SetNull)
+
+  @@index([organizationId])
+  @@index([userId])
+  @@index([action])
+  @@index([resourceType, resourceId])
+  @@index([createdAt])
+  @@map("audit_logs")
+}
+
+// ============================================
+// API Keys (For programmatic access)
+// ============================================
+
+model ApiKey {
+  id             String   @id @default(uuid())
+  organizationId String
+  name           String
+  keyHash        String   @unique // SHA-256 hash of the actual key
+  keyPrefix      String   // First 8 chars for display (e.g., "pk_live_")
+  permissions    String   // JSON string: ["read", "write", "admin"]
+  lastUsedAt     DateTime?
+  expiresAt      DateTime?
+  createdAt      DateTime @default(now())
+
+  @@index([organizationId])
+  @@index([keyHash])
+  @@map("api_keys")
+}

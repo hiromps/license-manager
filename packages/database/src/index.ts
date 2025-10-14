@@ -1,0 +1,7 @@
+import { PrismaClient } from '../node_modules/.prisma/client';
+
+export const prisma = new PrismaClient({
+  log: process.env.NODE_ENV === 'development' ? ['query', 'error', 'warn'] : ['error'],
+});
+
+export * from '../node_modules/.prisma/client';
