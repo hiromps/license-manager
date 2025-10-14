@@ -11,11 +11,18 @@
     "db:migrate": "pnpm --filter @license-manager/database db:migrate",
     "db:studio": "pnpm --filter @license-manager/database db:studio"
   },
-  "keywords": ["license", "saas", "management"],
+  "keywords": [
+    "license",
+    "saas",
+    "management"
+  ],
   "author": "",
   "license": "MIT",
   "engines": {
     "node": ">=20.0.0",
     "pnpm": ">=8.0.0"
+  },
+  "devDependencies": {
+    "libsodium-wrappers": "^0.7.15"
   }
 }

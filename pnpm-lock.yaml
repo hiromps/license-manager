@@ -6,7 +6,11 @@ settings:
 
 importers:
 
-  .: {}
+  .:
+    devDependencies:
+      libsodium-wrappers:
+        specifier: ^0.7.15
+        version: 0.7.15
 
   apps/api:
     dependencies:
