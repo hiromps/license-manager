@@ -18,6 +18,8 @@ export default function Licenses() {
     logout();
   };
 
+  const licenses: any[] = Array.isArray(licensesData?.data) ? licensesData.data : [];
+
   return (
     <div style={{ padding: '20px' }}>
       <header style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '30px' }}>
@@ -74,7 +76,7 @@ export default function Licenses() {
             </tr>
           </thead>
           <tbody>
-            {licensesData?.data?.map((license: any) => (
+            {licenses.map((license: any) => (
               <tr key={license.id} style={{ borderBottom: '1px solid #eee' }}>
                 <td style={{ padding: '12px' }}>
                   <code>{license.licenseKey}</code>
@@ -107,7 +109,7 @@ export default function Licenses() {
         </table>
       )}
 
-      {licensesData?.data?.length === 0 && (
+      {licenses.length === 0 && (
         <p style={{ textAlign: 'center', padding: '40px', color: '#666' }}>
           No licenses found. Create your first license to get started.
         </p>

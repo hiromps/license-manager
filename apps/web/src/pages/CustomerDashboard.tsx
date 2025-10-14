@@ -15,7 +15,7 @@ export default function CustomerDashboard() {
     logout();
   };
 
-  const licenses = licensesData?.data || [];
+  const licenses: any[] = Array.isArray(licensesData?.data) ? licensesData.data : [];
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-purple-50">
