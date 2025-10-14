@@ -1,6 +1,6 @@
 {
   "version": 2,
-  "buildCommand": "pnpm --filter @license-manager/database prisma generate && pnpm build",
+  "buildCommand": "pnpm --filter @license-manager/types build && pnpm --filter @license-manager/database prisma generate && pnpm build",
   "installCommand": "pnpm install",
   "framework": null,
   "builds": [
