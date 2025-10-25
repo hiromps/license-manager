@@ -96,34 +96,22 @@ export default function LicenseForm({ license, onSuccess, onCancel }: LicenseFor
   return (
     <form onSubmit={handleSubmit} style={{ maxWidth: '600px' }}>
       {error && (
-        <div style={{
-          padding: '12px',
-          marginBottom: '20px',
-          background: '#fee',
-          border: '1px solid #fcc',
-          borderRadius: '4px',
-          color: '#c33',
-        }}>
+        <div className="alert alert-error">
           {error}
         </div>
       )}
 
       {/* Product Selection (only for create mode) */}
       {!isEditMode && (
-        <div style={{ marginBottom: '20px' }}>
-          <label style={{ display: 'block', marginBottom: '8px', fontWeight: 'bold' }}>
-            製品 <span style={{ color: 'red' }}>*</span>
+        <div className="form-group">
+          <label className="form-label">
+            製品 <span className="required">*</span>
           </label>
           <select
             value={productId}
             onChange={(e) => setProductId(e.target.value)}
             required
-            style={{
-              width: '100%',
-              padding: '8px',
-              border: '1px solid #ddd',
-              borderRadius: '4px',
-            }}
+            className="form-select"
           >
             <option value="">製品を選択...</option>
             {products.map((product: any) => (
@@ -137,20 +125,15 @@ export default function LicenseForm({ license, onSuccess, onCancel }: LicenseFor
 
       {/* License Type (only for create mode) */}
       {!isEditMode && (
-        <div style={{ marginBottom: '20px' }}>
-          <label style={{ display: 'block', marginBottom: '8px', fontWeight: 'bold' }}>
-            ライセンスタイプ <span style={{ color: 'red' }}>*</span>
+        <div className="form-group">
+          <label className="form-label">
+            ライセンスタイプ <span className="required">*</span>
           </label>
           <select
             value={licenseType}
             onChange={(e) => setLicenseType(e.target.value)}
             required
-            style={{
-              width: '100%',
-              padding: '8px',
-              border: '1px solid #ddd',
-              borderRadius: '4px',
-            }}
+            className="form-select"
           >
             <option value="subscription">サブスクリプション</option>
             <option value="perpetual">永久ライセンス</option>
@@ -161,19 +144,14 @@ export default function LicenseForm({ license, onSuccess, onCancel }: LicenseFor
 
       {/* Status (only for edit mode) */}
       {isEditMode && (
-        <div style={{ marginBottom: '20px' }}>
-          <label style={{ display: 'block', marginBottom: '8px', fontWeight: 'bold' }}>
+        <div className="form-group">
+          <label className="form-label">
             ステータス
           </label>
           <select
             value={status}
             onChange={(e) => setStatus(e.target.value)}
-            style={{
-              width: '100%',
-              padding: '8px',
-              border: '1px solid #ddd',
-              borderRadius: '4px',
-            }}
+            className="form-select"
           >
             <option value="active">有効</option>
             <option value="suspended">停止中</option>
@@ -183,9 +161,9 @@ export default function LicenseForm({ license, onSuccess, onCancel }: LicenseFor
       )}
 
       {/* Max Activations */}
-      <div style={{ marginBottom: '20px' }}>
-        <label style={{ display: 'block', marginBottom: '8px', fontWeight: 'bold' }}>
-          最大アクティベーション数 <span style={{ color: 'red' }}>*</span>
+      <div className="form-group">
+        <label className="form-label">
+          最大アクティベーション数 <span className="required">*</span>
         </label>
         <input
           type="number"
@@ -193,74 +171,45 @@ export default function LicenseForm({ license, onSuccess, onCancel }: LicenseFor
           value={maxActivations}
           onChange={(e) => setMaxActivations(parseInt(e.target.value))}
           required
-          style={{
-            width: '100%',
-            padding: '8px',
-            border: '1px solid #ddd',
-            borderRadius: '4px',
-          }}
+          className="form-input"
         />
-        <small style={{ color: '#666' }}>このライセンスで有効化できるデバイスの数</small>
+        <small className="form-helper">このライセンスで有効化できるデバイスの数</small>
       </div>
 
       {/* Expiration Date */}
-      <div style={{ marginBottom: '20px' }}>
-        <label style={{ display: 'block', marginBottom: '8px', fontWeight: 'bold' }}>
+      <div className="form-group">
+        <label className="form-label">
           有効期限
         </label>
         <input
           type="date"
           value={expiresAt}
           onChange={(e) => setExpiresAt(e.target.value)}
-          style={{
-            width: '100%',
-            padding: '8px',
-            border: '1px solid #ddd',
-            borderRadius: '4px',
-          }}
+          className="form-input"
         />
-        <small style={{ color: '#666' }}>空白の場合は無期限</small>
+        <small className="form-helper">空白の場合は無期限</small>
       </div>
 
       {/* Features */}
-      <div style={{ marginBottom: '20px' }}>
-        <label style={{ display: 'block', marginBottom: '8px', fontWeight: 'bold' }}>
+      <div className="form-group">
+        <label className="form-label">
           機能フラグ
         </label>
 
         {/* Feature list */}
-        <div style={{ marginBottom: '10px' }}>
+        <div style={{ marginBottom: '0.75rem' }}>
           {Object.entries(features).map(([name, enabled]) => (
-            <div
-              key={name}
-              style={{
-                display: 'flex',
-                alignItems: 'center',
-                padding: '8px',
-                background: '#f9f9f9',
-                borderRadius: '4px',
-                marginBottom: '8px',
-              }}
-            >
+            <div key={name} className="feature-item">
               <input
                 type="checkbox"
                 checked={enabled}
                 onChange={() => handleToggleFeature(name)}
-                style={{ marginRight: '10px' }}
               />
-              <span style={{ flex: 1 }}>{name}</span>
+              <span className="feature-item-name">{name}</span>
               <button
                 type="button"
                 onClick={() => handleRemoveFeature(name)}
-                style={{
-                  padding: '4px 8px',
-                  background: '#dc3545',
-                  color: 'white',
-                  border: 'none',
-                  borderRadius: '4px',
-                  cursor: 'pointer',
-                  fontSize: '12px',
-                }}
+                className="btn btn-danger btn-sm"
               >
                 削除
               </button>
@@ -269,90 +218,57 @@ export default function LicenseForm({ license, onSuccess, onCancel }: LicenseFor
         </div>
 
         {/* Add new feature */}
-        <div style={{ display: 'flex', gap: '8px' }}>
+        <div style={{ display: 'flex', gap: '0.5rem' }}>
           <input
             type="text"
             value={newFeatureName}
             onChange={(e) => setNewFeatureName(e.target.value)}
             onKeyPress={(e) => e.key === 'Enter' && (e.preventDefault(), handleAddFeature())}
             placeholder="新しい機能名..."
-            style={{
-              flex: 1,
-              padding: '8px',
-              border: '1px solid #ddd',
-              borderRadius: '4px',
-            }}
+            className="form-input"
+            style={{ flex: 1 }}
           />
           <button
             type="button"
             onClick={handleAddFeature}
-            style={{
-              padding: '8px 16px',
-              background: '#28a745',
-              color: 'white',
-              border: 'none',
-              borderRadius: '4px',
-              cursor: 'pointer',
-            }}
+            className="btn btn-success"
           >
             追加
           </button>
         </div>
-        <small style={{ color: '#666' }}>
+        <small className="form-helper">
           機能の有効/無効を切り替えられます
         </small>
       </div>
 
       {/* Notes */}
-      <div style={{ marginBottom: '20px' }}>
-        <label style={{ display: 'block', marginBottom: '8px', fontWeight: 'bold' }}>
+      <div className="form-group">
+        <label className="form-label">
           メモ
         </label>
         <textarea
           value={notes}
           onChange={(e) => setNotes(e.target.value)}
           rows={4}
-          style={{
-            width: '100%',
-            padding: '8px',
-            border: '1px solid #ddd',
-            borderRadius: '4px',
-            fontFamily: 'inherit',
-          }}
+          className="form-textarea"
           placeholder="このライセンスに関するメモ..."
         />
       </div>
 
       {/* Form Actions */}
-      <div style={{ display: 'flex', gap: '10px', justifyContent: 'flex-end' }}>
+      <div style={{ display: 'flex', gap: '0.75rem', justifyContent: 'flex-end', marginTop: '2rem' }}>
         <button
           type="button"
           onClick={onCancel}
           disabled={isSubmitting}
-          style={{
-            padding: '10px 20px',
-            background: '#6c757d',
-            color: 'white',
-            border: 'none',
-            borderRadius: '4px',
-            cursor: isSubmitting ? 'not-allowed' : 'pointer',
-            opacity: isSubmitting ? 0.6 : 1,
-          }}
+          className="btn btn-secondary"
         >
           キャンセル
         </button>
         <button
           type="submit"
           disabled={isSubmitting}
-          style={{
-            padding: '10px 20px',
-            background: '#007bff',
-            color: 'white',
-            border: 'none',
-            borderRadius: '4px',
-            cursor: isSubmitting ? 'not-allowed' : 'pointer',
-            opacity: isSubmitting ? 0.6 : 1,
-          }}
+          className="btn btn-primary btn-lg"
         >
           {isSubmitting ? '処理中...' : isEditMode ? '更新' : '作成'}
         </button>

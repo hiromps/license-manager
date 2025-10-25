@@ -48,117 +48,196 @@ export default function Licenses() {
 
   const licenses: any[] = Array.isArray(licensesData?.data) ? licensesData.data : [];
 
+  const getStatusBadgeClass = (status: string) => {
+    switch (status) {
+      case 'active':
+        return 'badge-success';
+      case 'suspended':
+        return 'badge-warning';
+      case 'revoked':
+      case 'expired':
+        return 'badge-danger';
+      default:
+        return 'badge-info';
+    }
+  };
+
+  const getStatusText = (status: string) => {
+    switch (status) {
+      case 'active':
+        return '有効';
+      case 'suspended':
+        return '停止中';
+      case 'revoked':
+        return '無効化';
+      case 'expired':
+        return '期限切れ';
+      default:
+        return status;
+    }
+  };
+
   return (
-    <div style={{ padding: '20px' }}>
-      <header style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '30px' }}>
-        <h1>License Manager</h1>
-        <div>
-          <span style={{ marginRight: '20px' }}>{user?.email}</span>
-          <button onClick={handleLogout}>Logout</button>
+    <div style={{ minHeight: '100vh' }}>
+      {/* Header */}
+      <header className="header">
+        <div className="header-content">
+          <h1 className="header-title">License Manager</h1>
+          <div className="header-actions">
+            <span className="user-info">{user?.email}</span>
+            <button onClick={handleLogout} className="btn btn-secondary btn-sm">
+              ログアウト
+            </button>
+          </div>
         </div>
       </header>
 
-      <nav style={{ marginBottom: '30px' }}>
-        <Link to="/" style={{ marginRight: '20px' }}>Dashboard</Link>
-        <Link to="/licenses">Licenses</Link>
-      </nav>
+      {/* Main Content */}
+      <div className="container">
+        {/* Navigation */}
+        <nav className="nav">
+          <div className="nav-links">
+            <Link to="/" className="nav-link">
+              ダッシュボード
+            </Link>
+            <Link to="/licenses" className="nav-link active">
+              ライセンス
+            </Link>
+          </div>
+        </nav>
 
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
-        <h2>ライセンス管理</h2>
-        <button
-          onClick={() => setShowCreateModal(true)}
-          style={{
-            padding: '10px 20px',
-            background: '#007bff',
-            color: 'white',
-            border: 'none',
-            borderRadius: '4px',
-            cursor: 'pointer'
-          }}
-        >
-          + ライセンス作成
-        </button>
+        {/* Page Header */}
+        <div style={{
+          display: 'flex',
+          justifyContent: 'space-between',
+          alignItems: 'center',
+          marginBottom: '2rem',
+        }}>
+          <div>
+            <h2 style={{ margin: 0, marginBottom: '0.5rem' }}>ライセンス管理</h2>
+            <p style={{ margin: 0, color: 'var(--gray-600)', fontSize: '0.875rem' }}>
+              ライセンスの作成、編集、削除を行います
+            </p>
+          </div>
+          <button
+            onClick={() => setShowCreateModal(true)}
+            className="btn btn-primary btn-lg"
+          >
+            <span style={{ marginRight: '0.5rem' }}>+</span>
+            ライセンス作成
+          </button>
+        </div>
+
+        {/* Loading State */}
+        {isLoading && (
+          <div className="loading">
+            <p>ライセンスを読み込んでいます...</p>
+          </div>
+        )}
+
+        {/* Licenses Table */}
+        {!isLoading && licenses.length > 0 && (
+          <div className="table-container">
+            <table className="table">
+              <thead>
+                <tr>
+                  <th>ライセンスキー</th>
+                  <th>製品</th>
+                  <th>タイプ</th>
+                  <th>アクティベーション</th>
+                  <th>ステータス</th>
+                  <th>有効期限</th>
+                  <th style={{ textAlign: 'center' }}>操作</th>
+                </tr>
+              </thead>
+              <tbody>
+                {licenses.map((license: any) => (
+                  <tr key={license.id}>
+                    <td>
+                      <code>{license.licenseKey}</code>
+                    </td>
+                    <td style={{ fontWeight: '500' }}>{license.productName}</td>
+                    <td>
+                      <span className={`badge ${
+                        license.licenseType === 'perpetual' ? 'badge-info' :
+                        license.licenseType === 'trial' ? 'badge-warning' :
+                        'badge-success'
+                      }`}>
+                        {license.licenseType === 'subscription' ? 'サブスク' :
+                         license.licenseType === 'perpetual' ? '永久' :
+                         'トライアル'}
+                      </span>
+                    </td>
+                    <td>
+                      <span style={{
+                        fontWeight: '600',
+                        color: license.currentActivations >= license.maxActivations
+                          ? 'var(--danger-600)'
+                          : 'var(--success-600)',
+                      }}>
+                        {license.currentActivations}
+                      </span>
+                      <span style={{ color: 'var(--gray-400)', margin: '0 0.25rem' }}>/</span>
+                      <span style={{ color: 'var(--gray-600)' }}>
+                        {license.maxActivations}
+                      </span>
+                    </td>
+                    <td>
+                      <span className={`badge ${getStatusBadgeClass(license.status)}`}>
+                        {getStatusText(license.status)}
+                      </span>
+                    </td>
+                    <td style={{ color: 'var(--gray-600)' }}>
+                      {license.expiresAt ? new Date(license.expiresAt).toLocaleDateString('ja-JP') : '無期限'}
+                    </td>
+                    <td>
+                      <div style={{
+                        display: 'flex',
+                        gap: '0.5rem',
+                        justifyContent: 'center',
+                      }}>
+                        <button
+                          onClick={() => setEditingLicense(license)}
+                          className="btn btn-success btn-sm"
+                        >
+                          編集
+                        </button>
+                        <button
+                          onClick={() => setDeletingLicense(license)}
+                          className="btn btn-danger btn-sm"
+                        >
+                          削除
+                        </button>
+                      </div>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        )}
+
+        {/* Empty State */}
+        {!isLoading && licenses.length === 0 && (
+          <div className="card">
+            <div className="empty-state">
+              <div className="empty-state-icon">📄</div>
+              <h3 className="empty-state-title">ライセンスがありません</h3>
+              <p className="empty-state-description">
+                最初のライセンスを作成して開始しましょう
+              </p>
+              <button
+                onClick={() => setShowCreateModal(true)}
+                className="btn btn-primary"
+                style={{ marginTop: '1.5rem' }}
+              >
+                <span style={{ marginRight: '0.5rem' }}>+</span>
+                ライセンス作成
+              </button>
+            </div>
+          </div>
+        )}
       </div>
-
-      {isLoading ? (
-        <p>Loading licenses...</p>
-      ) : (
-        <table style={{ width: '100%', borderCollapse: 'collapse' }}>
-          <thead>
-            <tr style={{ background: '#f5f5f5' }}>
-              <th style={{ padding: '12px', textAlign: 'left', borderBottom: '2px solid #ddd' }}>License Key</th>
-              <th style={{ padding: '12px', textAlign: 'left', borderBottom: '2px solid #ddd' }}>Product</th>
-              <th style={{ padding: '12px', textAlign: 'left', borderBottom: '2px solid #ddd' }}>Type</th>
-              <th style={{ padding: '12px', textAlign: 'left', borderBottom: '2px solid #ddd' }}>Activations</th>
-              <th style={{ padding: '12px', textAlign: 'left', borderBottom: '2px solid #ddd' }}>Status</th>
-              <th style={{ padding: '12px', textAlign: 'left', borderBottom: '2px solid #ddd' }}>Expires</th>
-              <th style={{ padding: '12px', textAlign: 'left', borderBottom: '2px solid #ddd' }}>Actions</th>
-            </tr>
-          </thead>
-          <tbody>
-            {licenses.map((license: any) => (
-              <tr key={license.id} style={{ borderBottom: '1px solid #eee' }}>
-                <td style={{ padding: '12px' }}>
-                  <code>{license.licenseKey}</code>
-                </td>
-                <td style={{ padding: '12px' }}>{license.productName}</td>
-                <td style={{ padding: '12px' }}>{license.licenseType}</td>
-                <td style={{ padding: '12px' }}>
-                  {license.currentActivations}/{license.maxActivations}
-                </td>
-                <td style={{ padding: '12px' }}>
-                  <span style={{
-                    padding: '4px 8px',
-                    borderRadius: '4px',
-                    background: license.status === 'active' ? '#d4edda' : '#f8d7da',
-                    color: license.status === 'active' ? '#155724' : '#721c24',
-                  }}>
-                    {license.status}
-                  </span>
-                </td>
-                <td style={{ padding: '12px' }}>
-                  {license.expiresAt ? new Date(license.expiresAt).toLocaleDateString() : 'Never'}
-                </td>
-                <td style={{ padding: '12px' }}>
-                  <button
-                    onClick={() => setEditingLicense(license)}
-                    style={{
-                      marginRight: '5px',
-                      padding: '6px 12px',
-                      background: '#28a745',
-                      color: 'white',
-                      border: 'none',
-                      borderRadius: '4px',
-                      cursor: 'pointer',
-                    }}
-                  >
-                    編集
-                  </button>
-                  <button
-                    onClick={() => setDeletingLicense(license)}
-                    style={{
-                      padding: '6px 12px',
-                      background: '#dc3545',
-                      color: 'white',
-                      border: 'none',
-                      borderRadius: '4px',
-                      cursor: 'pointer',
-                    }}
-                  >
-                    削除
-                  </button>
-                </td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
-      )}
-
-      {licenses.length === 0 && !isLoading && (
-        <p style={{ textAlign: 'center', padding: '40px', color: '#666' }}>
-          ライセンスが見つかりません。最初のライセンスを作成してください。
-        </p>
-      )}
 
       {/* Create License Modal */}
       <Modal
@@ -193,40 +272,62 @@ export default function Licenses() {
         maxWidth="500px"
       >
         <div>
-          <p>本当にこのライセンスを削除しますか？</p>
+          <p style={{ marginBottom: '1.5rem', color: 'var(--gray-700)' }}>
+            本当にこのライセンスを削除しますか？
+          </p>
           {deletingLicense && (
-            <div style={{ background: '#f9f9f9', padding: '12px', borderRadius: '4px', marginBottom: '20px' }}>
-              <strong>ライセンスキー:</strong> <code>{deletingLicense.licenseKey}</code><br />
-              <strong>製品:</strong> {deletingLicense.productName}
+            <div style={{
+              background: 'var(--gray-50)',
+              padding: '1rem',
+              borderRadius: 'var(--radius-md)',
+              marginBottom: '1.5rem',
+              border: '1.5px solid var(--gray-200)',
+            }}>
+              <div style={{ marginBottom: '0.5rem' }}>
+                <strong style={{ color: 'var(--gray-700)' }}>ライセンスキー:</strong>{' '}
+                <code style={{
+                  background: 'var(--gray-200)',
+                  padding: '0.25rem 0.5rem',
+                  borderRadius: 'var(--radius-sm)',
+                  fontSize: '0.813rem',
+                  color: 'var(--primary-700)',
+                  fontWeight: '600',
+                }}>
+                  {deletingLicense.licenseKey}
+                </code>
+              </div>
+              <div>
+                <strong style={{ color: 'var(--gray-700)' }}>製品:</strong>{' '}
+                <span style={{ color: 'var(--gray-600)' }}>{deletingLicense.productName}</span>
+              </div>
             </div>
           )}
-          <p style={{ color: '#dc3545', fontWeight: 'bold' }}>
-            この操作は取り消せません。
-          </p>
-          <div style={{ display: 'flex', gap: '10px', justifyContent: 'flex-end' }}>
+          <div style={{
+            background: 'var(--danger-50)',
+            border: '1.5px solid var(--danger-200)',
+            borderRadius: 'var(--radius-md)',
+            padding: '0.875rem 1rem',
+            marginBottom: '1.5rem',
+          }}>
+            <p style={{
+              margin: 0,
+              color: 'var(--danger-700)',
+              fontWeight: '600',
+              fontSize: '0.875rem',
+            }}>
+              ⚠️ この操作は取り消せません
+            </p>
+          </div>
+          <div style={{ display: 'flex', gap: '0.75rem', justifyContent: 'flex-end' }}>
             <button
               onClick={() => setDeletingLicense(null)}
-              style={{
-                padding: '10px 20px',
-                background: '#6c757d',
-                color: 'white',
-                border: 'none',
-                borderRadius: '4px',
-                cursor: 'pointer',
-              }}
+              className="btn btn-secondary"
             >
               キャンセル
             </button>
             <button
               onClick={handleDelete}
-              style={{
-                padding: '10px 20px',
-                background: '#dc3545',
-                color: 'white',
-                border: 'none',
-                borderRadius: '4px',
-                cursor: 'pointer',
-              }}
+              className="btn btn-danger"
             >
               削除
             </button>
