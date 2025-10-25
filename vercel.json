@@ -1,7 +1,9 @@
 {
-  "buildCommand": "cd ../.. && pnpm --filter @license-manager/types build && pnpm --filter @license-manager/web build",
-  "outputDirectory": "dist",
-  "installCommand": "cd ../.. && pnpm install --no-frozen-lockfile",
+  "$schema": "https://openapi.vercel.sh/vercel.json",
+  "buildCommand": "pnpm --filter @license-manager/types build && pnpm --filter @license-manager/web build",
+  "outputDirectory": "apps/web/dist",
+  "installCommand": "pnpm install --no-frozen-lockfile",
+  "framework": null,
   "rewrites": [
     {
       "source": "/(.*)",
