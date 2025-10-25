@@ -1,5 +1,0 @@
-{
-  "buildCommand": "pnpm --filter @license-manager/types build && pnpm --filter @license-manager/web build",
-  "outputDirectory": "apps/web/dist",
-  "installCommand": "pnpm install"
-}
